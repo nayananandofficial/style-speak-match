@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
 import Layout from "@/components/Layout";
@@ -70,69 +69,67 @@ const ProductFinder = () => {
   ];
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto mb-8">
-          <h1 className="text-3xl font-bold mb-6 text-center">Smart Fit Finder</h1>
-          <p className="text-center text-gray-600 mb-8">
-            Tell us what you're looking for using your voice or the search box below. Try something like:
-            <br />
-            <span className="italic">"Show me slim fit cotton shirts for men under $50"</span> or{" "}
-            <span className="italic">"Women's loose dresses in linen fabric"</span>
-          </p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto mb-8">
+        <h1 className="text-3xl font-bold mb-6 text-center">Smart Fit Finder</h1>
+        <p className="text-center text-gray-600 mb-8">
+          Tell us what you're looking for using your voice or the search box below. Try something like:
+          <br />
+          <span className="italic">"Show me slim fit cotton shirts for men under $50"</span> or{" "}
+          <span className="italic">"Women's loose dresses in linen fabric"</span>
+        </p>
 
-          {/* Voice search bar */}
-          <div className="mb-12">
-            <VoiceSearchBar />
-          </div>
+        {/* Voice search bar */}
+        <div className="mb-12">
+          <VoiceSearchBar />
+        </div>
 
-          <div className="flex flex-col sm:flex-row gap-8">
-            {/* Filters - Mobile */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 sm:hidden mb-4">
-                  <Sliders className="h-4 w-4" />
-                  <span>Filters</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left">
-                <div className="h-full py-6 pr-6 overflow-y-auto">
-                  <h3 className="text-lg font-semibold mb-4">Refine Results</h3>
-                  {renderFilters()}
-                  
-                  <div className="mt-8">
-                    <SheetClose asChild>
-                      <Button className="w-full">Apply Filters</Button>
-                    </SheetClose>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-            
-            {/* Filters - Desktop */}
-            <div className="hidden sm:block w-64 flex-shrink-0">
-              <div className="sticky top-24 pr-4">
+        <div className="flex flex-col sm:flex-row gap-8">
+          {/* Filters - Mobile */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="flex items-center gap-2 sm:hidden mb-4">
+                <Sliders className="h-4 w-4" />
+                <span>Filters</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <div className="h-full py-6 pr-6 overflow-y-auto">
                 <h3 className="text-lg font-semibold mb-4">Refine Results</h3>
                 {renderFilters()}
-              </div>
-            </div>
-            
-            {/* Product results */}
-            <div className="flex-1">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-20">
-                  <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
-                  <p className="text-lg font-medium">Finding your perfect match...</p>
-                  <p className="text-sm text-gray-500">Our AI is analyzing your preferences</p>
+                
+                <div className="mt-8">
+                  <SheetClose asChild>
+                    <Button className="w-full">Apply Filters</Button>
+                  </SheetClose>
                 </div>
-              ) : (
-                <ProductGrid />
-              )}
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          {/* Filters - Desktop */}
+          <div className="hidden sm:block w-64 flex-shrink-0">
+            <div className="sticky top-24 pr-4">
+              <h3 className="text-lg font-semibold mb-4">Refine Results</h3>
+              {renderFilters()}
             </div>
+          </div>
+          
+          {/* Product results */}
+          <div className="flex-1">
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-20">
+                <Loader2 className="h-12 w-12 text-primary animate-spin mb-4" />
+                <p className="text-lg font-medium">Finding your perfect match...</p>
+                <p className="text-sm text-gray-500">Our AI is analyzing your preferences</p>
+              </div>
+            ) : (
+              <ProductGrid />
+            )}
           </div>
         </div>
       </div>
-    </Layout>
+    </div>
   );
   
   function renderFilters() {
@@ -215,4 +212,11 @@ const ProductFinder = () => {
   }
 };
 
-export default ProductFinder;
+// Create a wrapper component that includes the Layout
+const ProductFinderPage = () => (
+  <Layout>
+    <ProductFinder />
+  </Layout>
+);
+
+export default ProductFinderPage;
