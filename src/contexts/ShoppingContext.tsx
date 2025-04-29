@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type Product = {
@@ -306,7 +305,7 @@ export const ShoppingProvider = ({ children }: { children: ReactNode }) => {
         updateCartItemQuantity,
         updateSearchQuery,
         updateUserPreferences,
-        setVoiceListening,
+        setVoiceListening: setIsVoiceListening,
         processVoiceQuery,
         clearCart,
       }}

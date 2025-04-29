@@ -1,5 +1,4 @@
 
-import { useShoppingContext } from "@/contexts/ShoppingContext";
 import Layout from "@/components/Layout";
 import HeroSection from "@/components/home/HeroSection";
 import FeaturesSection from "@/components/home/FeaturesSection";
@@ -7,8 +6,6 @@ import CategorySection from "@/components/home/CategorySection";
 import ProductGrid from "@/components/products/ProductGrid";
 
 const Index = () => {
-  const { recommendedProducts } = useShoppingContext();
-
   return (
     <Layout>
       <HeroSection />

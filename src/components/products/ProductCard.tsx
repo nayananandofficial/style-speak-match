@@ -7,16 +7,26 @@ import { Badge } from "@/components/ui/badge";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
 import { toast } from "sonner";
 
+type Product = {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  price: number;
+  salePrice?: number;
+  images: string[];
+  gender: 'Men' | 'Women' | 'Unisex' | 'Kids';
+  sizes: string[];
+  colors: string[];
+  confidence?: number;
+  fit?: 'Slim' | 'Regular' | 'Loose' | 'Oversized';
+  fabric: string;
+  description: string;
+  bestFit?: boolean;
+};
+
 type ProductCardProps = {
-  product: {
-    id: string;
-    name: string;
-    brand: string;
-    price: number;
-    salePrice?: number;
-    images: string[];
-    bestFit?: boolean;
-  };
+  product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
@@ -30,7 +40,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   };
   
   const handleAddToCart = () => {
-    addToCart(product, 1, "M", "Default"); // Default size and color for simplicity
+    addToCart(product, 1, product.sizes[0] || "M", product.colors[0] || "Default");
     toast.success(`${product.name} added to cart`);
   };
   
