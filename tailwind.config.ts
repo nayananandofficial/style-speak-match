@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+                fitvogue: {
+                    purple: '#8B5CF6',
+                    'light-purple': '#D6BCFA',
+                    teal: '#0EA5E9',
+                    'light-teal': '#D3E4FD',
+                    gray: '#8E9196',
+                    'dark-gray': '#1A1F2C',
+                    'light-gray': '#F1F0FB',
+                }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +94,26 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+                'pulse-soft': {
+                    '0%, 100%': { opacity: '1' },
+                    '50%': { opacity: '0.8' },
+                },
+                'fade-in': {
+                    from: { opacity: '0', transform: 'translateY(10px)' },
+                    to: { opacity: '1', transform: 'translateY(0)' },
+                },
+                'slide-in': {
+                    from: { transform: 'translateX(-10px)', opacity: '0' },
+                    to: { transform: 'translateX(0)', opacity: '1' },
+                }
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+                'pulse-soft': 'pulse-soft 2s infinite ease-in-out',
+                'fade-in': 'fade-in 0.3s ease-out',
+                'slide-in': 'slide-in 0.3s ease-out',
 			}
 		}
 	},
