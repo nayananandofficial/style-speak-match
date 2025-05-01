@@ -87,13 +87,13 @@ const WishlistPage = () => {
     const defaultSize = product.sizes[0] || "";
     const defaultColor = product.colors[0] || "";
     
-    // Fix: Pass all 4 required arguments to addToCart
+    // Fix: Pass all 4 required arguments to addToCart and correct property names
     addToCart(
       {
         id: product.id,
         name: product.name,
         price: product.sale_price || product.price,
-        image: product.images[0] || "",
+        images: [product.images[0] || ""], // Fix: Changed 'image' to 'images' array
         size: defaultSize,
         color: defaultColor,
         quantity: 1
