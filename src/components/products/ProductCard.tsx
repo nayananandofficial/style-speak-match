@@ -36,15 +36,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     const defaultSize = product.sizes[0] || "";
     const defaultColor = product.colors[0] || "";
     
-    // Pass all 4 required arguments to addToCart with correct properties
+    // Pass the product directly
     addToCart(
-      {
-        id: product.id,
-        name: product.name,
-        price: product.sale_price || product.price,
-        images: [product.images[0] || ""],
-        quantity: 1
-      },
+      product,
       1, // quantity
       defaultSize, // size
       defaultColor // color

@@ -22,13 +22,7 @@ const WishlistItem = ({ id, product, onRemove }: WishlistItemProps) => {
     const defaultColor = product.colors[0] || "";
     
     addToCart(
-      {
-        id: product.id,
-        name: product.name,
-        price: product.sale_price || product.price,
-        images: [product.images[0] || ""],
-        quantity: 1
-      },
+      product,
       1, // quantity
       defaultSize, // size
       defaultColor // color
