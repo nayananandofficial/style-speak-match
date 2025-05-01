@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -12,7 +13,7 @@ const CartContent = () => {
   const { cart, removeFromCart, updateCartItemQuantity } = useShoppingContext();
   const [promoCode, setPromoCode] = useState("");
   
-  const subtotal = cart.reduce((sum, item) => sum + (item.product.salePrice || item.product.price) * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + (item.product.sale_price || item.product.price) * item.quantity, 0);
   const shipping = subtotal > 0 ? 5.99 : 0;
   const tax = subtotal * 0.07; // 7% tax
   const total = subtotal + shipping + tax;
@@ -81,7 +82,7 @@ const CartContent = () => {
                               </Link>
                             </h3>
                             <p className="mt-1 text-sm text-gray-500">
-                              {item.product.brand}
+                              {item.product.description?.split(' ').slice(0, 3).join(' ')}...
                             </p>
                             <div className="mt-1 flex items-center text-sm">
                               <span className="mr-2">Size: {item.size}</span>
@@ -91,9 +92,9 @@ const CartContent = () => {
                           
                           <div className="text-right">
                             <p className="text-base font-medium">
-                              ${((item.product.salePrice || item.product.price) * item.quantity).toFixed(2)}
+                              ${((item.product.sale_price || item.product.price) * item.quantity).toFixed(2)}
                             </p>
-                            {item.product.salePrice && (
+                            {item.product.sale_price && (
                               <p className="text-sm text-gray-500 line-through">
                                 ${(item.product.price * item.quantity).toFixed(2)}
                               </p>
@@ -184,8 +185,10 @@ const CartContent = () => {
                   <Button variant="outline" onClick={handleApplyPromoCode}>Apply</Button>
                 </div>
                 
-                <Button className="w-full" size="lg" onClick={handleCheckout}>
-                  Proceed to Checkout
+                <Button className="w-full" size="lg" onClick={handleCheckout} asChild>
+                  <Link to="/checkout">
+                    Proceed to Checkout
+                  </Link>
                 </Button>
                 
                 <div className="mt-4 text-center text-sm text-gray-500">

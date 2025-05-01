@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,10 @@ import { useShoppingContext } from "@/contexts/ShoppingContext";
 import { Link } from "react-router-dom";
 
 const CheckoutPage = () => {
-  const { cart } = useShoppingContext();
+  const { cart, clearCart } = useShoppingContext();
   const [paymentMethod, setPaymentMethod] = useState("credit-card");
   
-  const subtotal = cart.reduce((sum, item) => sum + (item.product.salePrice || item.product.price) * item.quantity, 0);
+  const subtotal = cart.reduce((sum, item) => sum + (item.product.sale_price || item.product.price) * item.quantity, 0);
   const shipping = subtotal > 0 ? 5.99 : 0;
   const tax = subtotal * 0.07; // 7% tax
   const total = subtotal + shipping + tax;
@@ -21,6 +22,7 @@ const CheckoutPage = () => {
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
     toast.success("Order placed successfully!");
+    clearCart(); // Clear the cart after successful order
   };
 
   if (cart.length === 0) {
@@ -167,7 +169,7 @@ const CheckoutPage = () => {
                       <p className="text-sm">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      ${((item.product.salePrice || item.product.price) * item.quantity).toFixed(2)}
+                      ${((item.product.sale_price || item.product.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 ))}
