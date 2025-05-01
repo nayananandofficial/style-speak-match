@@ -13,8 +13,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // These values will be replaced with the actual values from your Supabase project
   // They are visible in the client but this is normal for the anonymous key
   // as it's meant to be public
-  supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://your-project-url.supabase.co";
-  supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "your-supabase-anon-key";
+  supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://nbjriasakctsmlfyxvum.supabase.co";
+  supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ianJpYXNha2N0c21sZnl4dnVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMzA4MzksImV4cCI6MjA2MTcwNjgzOX0.yAgNmXkN-AOnnrUHBlR6BgF0KF4wwCcy0BLb_Et4Q7k";
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
