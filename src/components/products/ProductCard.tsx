@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -73,7 +72,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         // Add to wishlist
         const { error } = await supabase
           .from("wishlists")
-          .insert({ user_id: user.id, product_id: product.id });
+          .insert([{ user_id: user.id, product_id: product.id }]);
           
         if (error) {
           if (error.code === "23505") {

@@ -45,7 +45,8 @@ const WishlistPage = () => {
         
         const formattedItems: WishlistItem[] = data.map(item => ({
           id: item.id,
-          product: item.products as Product
+          // Fix the type issue by adding type assertion
+          product: item.products as unknown as Product
         }));
         
         setWishlistItems(formattedItems);
