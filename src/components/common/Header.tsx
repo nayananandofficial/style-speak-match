@@ -20,6 +20,12 @@ const Header = () => {
     { name: "Sale", path: "/sale" },
   ];
 
+  const userLinks = [
+    { name: "Profile", path: "/profile", icon: User },
+    { name: "Wishlist", path: "/wishlist", icon: Heart },
+    { name: "Orders", path: "/orders", icon: ShoppingCart },
+  ];
+
   return (
     <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
       <div className="container mx-auto px-4 py-3">
@@ -42,6 +48,12 @@ const Header = () => {
                 {category.name}
               </Link>
             ))}
+            <Link 
+              to="/finder" 
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Smart Finder
+            </Link>
           </nav>
           
           {/* Right actions */}
@@ -51,7 +63,7 @@ const Header = () => {
               <span className="hidden md:inline">Wishlist</span>
             </Link>
             
-            <Link to="/account" className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors">
+            <Link to="/profile" className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors">
               <User size={20} className="mr-1" />
               <span className="hidden md:inline">Account</span>
             </Link>
@@ -91,22 +103,39 @@ const Header = () => {
                         {category.name}
                       </Link>
                     ))}
+                    <Link
+                      to="/finder"
+                      className="text-base font-medium hover:text-primary transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Smart Finder
+                    </Link>
+                    <div className="h-px bg-border my-2"></div>
+                    {userLinks.map((link) => (
+                      <Link
+                        key={link.name}
+                        to={link.path}
+                        className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <link.icon size={18} className="mr-2" />
+                        {link.name}
+                      </Link>
+                    ))}
                     <div className="h-px bg-border my-2"></div>
                     <Link
-                      to="/wishlist"
-                      className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                      to="/about"
+                      className="text-base font-medium hover:text-primary transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Heart size={18} className="mr-2" />
-                      Wishlist
+                      About Us
                     </Link>
                     <Link
-                      to="/account"
-                      className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                      to="/faq"
+                      className="text-base font-medium hover:text-primary transition-colors"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <User size={18} className="mr-2" />
-                      Account
+                      FAQ
                     </Link>
                   </nav>
                 </div>
