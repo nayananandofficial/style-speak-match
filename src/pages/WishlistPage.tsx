@@ -87,15 +87,21 @@ const WishlistPage = () => {
     const defaultSize = product.sizes[0] || "";
     const defaultColor = product.colors[0] || "";
     
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.sale_price || product.price,
-      image: product.images[0] || "",
-      size: defaultSize,
-      color: defaultColor,
-      quantity: 1
-    });
+    // Fix: Pass all 4 required arguments to addToCart
+    addToCart(
+      {
+        id: product.id,
+        name: product.name,
+        price: product.sale_price || product.price,
+        image: product.images[0] || "",
+        size: defaultSize,
+        color: defaultColor,
+        quantity: 1
+      },
+      1, // quantity
+      defaultSize, // size
+      defaultColor // color
+    );
     
     toast.success(`${product.name} added to cart`);
   };
