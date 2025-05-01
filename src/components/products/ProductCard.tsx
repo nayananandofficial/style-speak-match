@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,15 +36,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
     const defaultSize = product.sizes[0] || "";
     const defaultColor = product.colors[0] || "";
     
-    // Fix: Pass all 4 required arguments to addToCart and correct property names
+    // Pass all 4 required arguments to addToCart with correct properties
     addToCart(
       {
         id: product.id,
         name: product.name,
         price: product.sale_price || product.price,
-        images: [product.images[0] || ""], // Fix: Changed 'image' to 'images' array
-        size: defaultSize,
-        color: defaultColor,
+        images: [product.images[0] || ""],
         quantity: 1
       },
       1, // quantity
