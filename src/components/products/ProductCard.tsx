@@ -1,115 +1,169 @@
 
-import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Product } from "@/services/productService";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
-type Product = {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  salePrice?: number;
-  images: string[];
-  gender: 'Men' | 'Women' | 'Unisex' | 'Kids';
-  sizes: string[];
-  colors: string[];
-  confidence?: number;
-  fit?: 'Slim' | 'Regular' | 'Loose' | 'Oversized';
-  fabric: string;
-  description: string;
-  bestFit?: boolean;
-};
-
-type ProductCardProps = {
+interface ProductCardProps {
   product: Product;
 }
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useShoppingContext();
-  const [isWishlist, setIsWishlist] = useState(false);
+  const { user } = useAuth();
+  const [isWishlisted, setIsWishlisted] = useState(false);
   
-  const handleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsWishlist(!isWishlist);
-    toast.success(isWishlist ? "Removed from wishlist" : "Added to wishlist");
-  };
+  // Format the price with a currency symbol
+  const formattedPrice = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(product.price);
+  
+  // Format sale price if available
+  const formattedSalePrice = product.sale_price 
+    ? new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(product.sale_price)
+    : null;
   
   const handleAddToCart = () => {
-    addToCart(product, 1, product.sizes[0] || "M", product.colors[0] || "Default");
+    // Set default values for size and color
+    const defaultSize = product.sizes[0] || "";
+    const defaultColor = product.colors[0] || "";
+    
+    addToCart({
+      id: product.id,
+      name: product.name,
+      price: product.sale_price || product.price,
+      image: product.images[0] || "",
+      size: defaultSize,
+      color: defaultColor,
+      quantity: 1
+    });
+    
     toast.success(`${product.name} added to cart`);
   };
   
-  const discountPercentage = product.salePrice 
-    ? Math.round(((product.price - product.salePrice) / product.price) * 100)
-    : 0;
+  const toggleWishlist = async () => {
+    if (!user) {
+      toast.error("Please log in to add items to your wishlist");
+      return;
+    }
     
-  return (
-    <div className="group relative animate-fade-in">
-      {/* Product Image */}
-      <Link to={`/product/${product.id}`} className="block aspect-square overflow-hidden bg-gray-100 rounded-md">
-        <img
-          src={product.images[0]}
-          alt={product.name}
-          className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
-        />
+    try {
+      if (isWishlisted) {
+        // Remove from wishlist
+        const { error } = await supabase
+          .from("wishlists")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("product_id", product.id);
+          
+        if (error) throw error;
         
-        {/* Wishlist Button */}
-        <button
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-white/80 hover:bg-white text-gray-700 hover:text-red-500 transition-colors"
-          onClick={handleWishlist}
-        >
-          <Heart className={`h-5 w-5 ${isWishlist ? "fill-red-500 text-red-500" : ""}`} />
-        </button>
-        
-        {/* Sale Badge */}
-        {product.salePrice && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-red-500 hover:bg-red-600">-{discountPercentage}%</Badge>
-          </div>
-        )}
-        
-        {/* AI Best Fit Badge */}
-        {product.bestFit && (
-          <div className="absolute bottom-3 left-3 right-3">
-            <Badge className="w-full justify-center bg-fitvogue-purple hover:bg-fitvogue-purple/90 text-white">
-              Best Fit for You
-            </Badge>
-          </div>
-        )}
-      </Link>
+        setIsWishlisted(false);
+        toast.success("Removed from wishlist");
+      } else {
+        // Add to wishlist
+        const { error } = await supabase
+          .from("wishlists")
+          .insert({ user_id: user.id, product_id: product.id });
+          
+        if (error) {
+          if (error.code === "23505") {
+            toast.error("This item is already in your wishlist");
+          } else {
+            throw error;
+          }
+        } else {
+          setIsWishlisted(true);
+          toast.success("Added to wishlist");
+        }
+      }
+    } catch (error) {
+      console.error("Error updating wishlist:", error);
+      toast.error("Failed to update wishlist");
+    }
+  };
+  
+  // Check if item is in wishlist when component mounts
+  useEffect(() => {
+    if (user) {
+      const checkWishlist = async () => {
+        const { data, error } = await supabase
+          .from("wishlists")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("product_id", product.id)
+          .single();
+          
+        if (!error && data) {
+          setIsWishlisted(true);
+        }
+      };
       
-      {/* Product Info */}
-      <div className="mt-3">
+      checkWishlist();
+    }
+  }, [user, product.id]);
+
+  return (
+    <div className="group">
+      <div className="aspect-square overflow-hidden rounded-lg bg-gray-100 relative">
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-sm font-medium text-gray-900 group-hover:text-primary transition-colors">{product.name}</h3>
+          <img 
+            src={product.images[0] || "/placeholder.svg"} 
+            alt={product.name}
+            className="h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105"
+          />
         </Link>
-        <p className="text-xs text-gray-500">{product.brand}</p>
-        <div className="mt-1 flex items-center">
-          {product.salePrice ? (
-            <>
-              <span className="text-sm font-medium text-red-600">${product.salePrice.toFixed(2)}</span>
-              <span className="ml-2 text-xs text-gray-500 line-through">${product.price.toFixed(2)}</span>
-            </>
-          ) : (
-            <span className="text-sm font-medium">${product.price.toFixed(2)}</span>
-          )}
-        </div>
+        
+        {product.sale_price && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-medium px-2 py-1 rounded">
+            Sale
+          </div>
+        )}
+        
+        <Button
+          onClick={toggleWishlist}
+          size="icon"
+          variant="ghost"
+          className={`absolute top-2 right-2 bg-white/80 hover:bg-white ${
+            isWishlisted ? 'text-red-500' : 'text-gray-600'
+          }`}
+        >
+          <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-current' : ''}`} />
+          <span className="sr-only">Add to wishlist</span>
+        </Button>
       </div>
       
-      {/* Quick Add Button - Appears on Hover */}
-      <div className="absolute inset-x-0 bottom-0 mb-12 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="mt-3 space-y-1 text-sm">
+        <Link to={`/product/${product.id}`}>
+          <h3 className="font-medium text-gray-900">{product.name}</h3>
+        </Link>
+        
+        <div className="flex items-center space-x-2">
+          {formattedSalePrice ? (
+            <>
+              <p className="font-medium text-red-600">{formattedSalePrice}</p>
+              <p className="text-muted-foreground line-through">{formattedPrice}</p>
+            </>
+          ) : (
+            <p className="font-medium text-gray-900">{formattedPrice}</p>
+          )}
+        </div>
+        
         <Button 
-          variant="default" 
-          size="sm" 
-          className="w-full rounded-md bg-fitvogue-purple hover:bg-fitvogue-purple/90"
           onClick={handleAddToCart}
+          size="sm" 
+          className="w-full mt-2"
         >
-          Quick Add
+          Add to Cart
         </Button>
       </div>
     </div>

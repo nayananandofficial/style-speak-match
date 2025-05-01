@@ -1,36 +1,60 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
-const LoginPage = () => {
-  const [email, setEmail] = useState("");
+const UpdatePasswordPage = () => {
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if there's an access token in the URL
+    // This happens when the user clicks on the password reset link in their email
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    
+    if (accessToken) {
+      // Set the access token in the session
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '',
+      });
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match!");
+      return;
+    }
+    
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    
     setLoading(true);
     
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await supabase.auth.updateUser({ password });
       
       if (error) {
         toast.error(error.message);
       } else {
-        navigate("/");
+        toast.success("Password updated successfully!");
+        navigate("/login");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      toast.error("An unexpected error occurred");
+      console.error("Error updating password:", error);
+      toast.error("Failed to update password");
     } finally {
       setLoading(false);
     }
@@ -48,35 +72,15 @@ const LoginPage = () => {
         
         <div className="rounded-lg border bg-white shadow-sm p-6">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold">Welcome back</h1>
+            <h1 className="text-2xl font-bold">Set New Password</h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Log in to your FitVogue account
+              Please enter your new password
             </p>
           </div>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="you@example.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link 
-                  to="/reset-password" 
-                  className="text-xs font-medium text-primary hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">New Password</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -84,15 +88,20 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required 
               />
+              <p className="text-xs text-muted-foreground">
+                Password must be at least 8 characters long
+              </p>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="remember" 
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked === true)}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm New Password</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required 
               />
-              <Label htmlFor="remember" className="text-sm">Remember me</Label>
             </div>
             
             <Button 
@@ -100,15 +109,15 @@ const LoginPage = () => {
               className="w-full"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Log In"}
+              {loading ? "Updating..." : "Update Password"}
             </Button>
           </form>
           
           <div className="mt-6 text-center text-sm">
             <p>
-              Don't have an account?{" "}
-              <Link to="/signup" className="font-medium text-primary hover:underline">
-                Sign up
+              Remember your password?{" "}
+              <Link to="/login" className="font-medium text-primary hover:underline">
+                Log in
               </Link>
             </p>
           </div>
@@ -124,4 +133,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default UpdatePasswordPage;

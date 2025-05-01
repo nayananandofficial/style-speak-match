@@ -1,14 +1,27 @@
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const ResetPasswordPage = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { resetPassword } = useAuth();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("If your email is registered, you'll receive instructions to reset your password.");
+    setLoading(true);
+    
+    try {
+      await resetPassword(email);
+    } catch (error) {
+      console.error("Error in reset password:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,10 +45,23 @@ const ResetPasswordPage = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@example.com" required />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
             </div>
             
-            <Button type="submit" className="w-full">Reset Password</Button>
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? "Sending..." : "Reset Password"}
+            </Button>
           </form>
           
           <div className="mt-6 text-center text-sm">

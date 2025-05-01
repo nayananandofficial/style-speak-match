@@ -1,15 +1,18 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ShoppingCart, User, Heart, Menu, X } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ShoppingCart, User, Heart, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useShoppingContext } from "@/contexts/ShoppingContext";
+import { useAuth } from "@/contexts/AuthContext";
 import VoiceSearchBar from "./VoiceSearchBar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const Header = () => {
   const { cart } = useShoppingContext();
+  const { user, profile, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
   
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   
@@ -25,6 +28,11 @@ const Header = () => {
     { name: "Wishlist", path: "/wishlist", icon: Heart },
     { name: "Orders", path: "/orders", icon: ShoppingCart },
   ];
+  
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b shadow-sm">
@@ -63,10 +71,21 @@ const Header = () => {
               <span className="hidden md:inline">Wishlist</span>
             </Link>
             
-            <Link to="/profile" className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors">
-              <User size={20} className="mr-1" />
-              <span className="hidden md:inline">Account</span>
-            </Link>
+            {user ? (
+              <div className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors">
+                <Link to="/profile" className="flex items-center">
+                  <User size={20} className="mr-1" />
+                  <span className="hidden md:inline">
+                    {profile?.first_name || 'Account'}
+                  </span>
+                </Link>
+              </div>
+            ) : (
+              <Link to="/login" className="hidden sm:flex items-center text-sm font-medium hover:text-primary transition-colors">
+                <User size={20} className="mr-1" />
+                <span className="hidden md:inline">Login</span>
+              </Link>
+            )}
             
             <Link to="/cart" className="flex items-center text-sm font-medium hover:text-primary transition-colors">
               <div className="relative">
@@ -111,17 +130,52 @@ const Header = () => {
                       Smart Finder
                     </Link>
                     <div className="h-px bg-border my-2"></div>
-                    {userLinks.map((link) => (
-                      <Link
-                        key={link.name}
-                        to={link.path}
-                        className="flex items-center text-base font-medium hover:text-primary transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <link.icon size={18} className="mr-2" />
-                        {link.name}
-                      </Link>
-                    ))}
+                    
+                    {user ? (
+                      <>
+                        {userLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            to={link.path}
+                            className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            <link.icon size={18} className="mr-2" />
+                            {link.name}
+                          </Link>
+                        ))}
+                        <button
+                          className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            handleSignOut();
+                          }}
+                        >
+                          <LogOut size={18} className="mr-2" />
+                          Sign Out
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <User size={18} className="mr-2" />
+                          Login
+                        </Link>
+                        <Link
+                          to="/signup"
+                          className="flex items-center text-base font-medium hover:text-primary transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <User size={18} className="mr-2" />
+                          Sign Up
+                        </Link>
+                      </>
+                    )}
+                    
                     <div className="h-px bg-border my-2"></div>
                     <Link
                       to="/about"

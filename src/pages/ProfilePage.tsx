@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,17 +8,103 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const profileSchema = z.object({
+  first_name: z.string().min(2, { message: "First name must be at least 2 characters." }),
+  last_name: z.string().min(2, { message: "Last name must be at least 2 characters." }),
+  email: z.string().email({ message: "Invalid email address." }),
+  phone: z.string().optional(),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, { message: "Current password is required." }),
+  newPassword: z.string().min(8, { message: "Password must be at least 8 characters." }),
+  confirmPassword: z.string().min(8, { message: "Please confirm your password." }),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type PasswordFormData = z.infer<typeof passwordSchema>;
 
 const ProfilePage = () => {
-  const handleSaveChanges = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Profile updated successfully!");
+  const { user, profile, signOut, updateProfile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
+  
+  // Profile form
+  const profileForm = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      first_name: profile?.first_name || "",
+      last_name: profile?.last_name || "",
+      email: profile?.email || user?.email || "",
+      phone: profile?.phone || "",
+    },
+  });
+  
+  // Password form
+  const passwordForm = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const handleSaveProfile = async (data: ProfileFormData) => {
+    try {
+      await updateProfile({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        phone: data.phone,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    }
   };
 
-  const handleSubmitPassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast.success("Password updated successfully!");
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
   };
+
+  const handleUpdatePassword = async (data: PasswordFormData) => {
+    try {
+      const { data: userData, error } = await supabase.auth.updateUser({
+        password: data.newPassword,
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast.success("Password updated successfully");
+      passwordForm.reset();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update password");
+    }
+  };
+
+  if (!user || !profile) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-16 text-center">
+          <h1 className="text-2xl font-bold mb-4">Please log in to view your profile</h1>
+          <Button onClick={() => navigate("/login")}>Go to Login</Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -25,9 +113,9 @@ const ProfilePage = () => {
         
         <div className="flex flex-col md:flex-row gap-8">
           <div className="md:w-64 flex-shrink-0">
-            <h2 className="font-medium text-lg mb-4">John Doe</h2>
-            <p className="text-sm text-muted-foreground mb-6">john.doe@example.com</p>
-            <Button variant="outline" className="w-full mb-2">Sign Out</Button>
+            <h2 className="font-medium text-lg mb-4">{profile.first_name} {profile.last_name}</h2>
+            <p className="text-sm text-muted-foreground mb-6">{profile.email}</p>
+            <Button variant="outline" className="w-full mb-2" onClick={handleSignOut}>Sign Out</Button>
             <Button variant="link" className="text-destructive p-0 h-auto w-full text-left text-sm">
               Delete Account
             </Button>
@@ -45,37 +133,93 @@ const ProfilePage = () => {
               <TabsContent value="profile">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>
-                      Update your personal information
-                    </CardDescription>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>Profile Information</CardTitle>
+                        <CardDescription>
+                          Update your personal information
+                        </CardDescription>
+                      </div>
+                      {!isEditing && (
+                        <Button variant="outline" onClick={() => setIsEditing(true)}>
+                          Edit
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSaveChanges} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input id="firstName" defaultValue="John" />
+                    <Form {...profileForm}>
+                      <form onSubmit={profileForm.handleSubmit(handleSaveProfile)} className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <FormField
+                            control={profileForm.control}
+                            name="first_name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>First Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} readOnly={!isEditing} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={profileForm.control}
+                            name="last_name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Last Name</FormLabel>
+                                <FormControl>
+                                  <Input {...field} readOnly={!isEditing} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
                         </div>
                         
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input id="lastName" defaultValue="Doe" />
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue="john.doe@example.com" />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phone">Phone</Label>
-                        <Input id="phone" type="tel" defaultValue="+1 234 567 8900" />
-                      </div>
-                      
-                      <Button type="submit">Save Changes</Button>
-                    </form>
+                        <FormField
+                          control={profileForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly={true} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={profileForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl>
+                                <Input {...field} readOnly={!isEditing} type="tel" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {isEditing && (
+                          <div className="flex gap-2 justify-end">
+                            <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                              Cancel
+                            </Button>
+                            <Button type="submit">
+                              Save Changes
+                            </Button>
+                          </div>
+                        )}
+                      </form>
+                    </Form>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -106,24 +250,53 @@ const ProfilePage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <form onSubmit={handleSubmitPassword} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="currentPassword">Current Password</Label>
-                        <Input id="currentPassword" type="password" />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">New Password</Label>
-                        <Input id="newPassword" type="password" />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                        <Input id="confirmPassword" type="password" />
-                      </div>
-                      
-                      <Button type="submit">Update Password</Button>
-                    </form>
+                    <Form {...passwordForm}>
+                      <form onSubmit={passwordForm.handleSubmit(handleUpdatePassword)} className="space-y-4">
+                        <FormField
+                          control={passwordForm.control}
+                          name="currentPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Current Password</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="password" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={passwordForm.control}
+                          name="newPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>New Password</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="password" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={passwordForm.control}
+                          name="confirmPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Confirm New Password</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="password" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <Button type="submit">Update Password</Button>
+                      </form>
+                    </Form>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -138,7 +311,7 @@ const ProfilePage = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      This feature will be available after database integration.
+                      Preferences will be available after completing your first order.
                     </p>
                   </CardContent>
                 </Card>

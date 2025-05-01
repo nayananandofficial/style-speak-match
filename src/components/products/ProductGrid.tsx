@@ -1,79 +1,87 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
-import { useShoppingContext } from "@/contexts/ShoppingContext";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Product, getProducts, getProductsByGender, getSaleProducts } from "@/services/productService";
+import { useParams } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const ProductGrid = () => {
-  const { recommendedProducts, products } = useShoppingContext();
-  const [sortOption, setSortOption] = useState("recommended");
-  
-  const displayProducts = recommendedProducts.length > 0 ? recommendedProducts : products;
-  
-  // Sort products
-  const sortedProducts = [...displayProducts].sort((a, b) => {
-    switch (sortOption) {
-      case "price-low-to-high":
-        return (a.salePrice || a.price) - (b.salePrice || b.price);
-      case "price-high-to-low":
-        return (b.salePrice || b.price) - (a.salePrice || a.price);
-      case "newest":
-        // This would use a timestamp in a real app
-        return Math.random() - 0.5;
-      case "recommended":
-      default:
-        // Sort by confidence score if available, or random
-        if (a.confidence && b.confidence) {
-          return b.confidence - a.confidence;
+interface ProductGridProps {
+  featured?: boolean;
+  onSale?: boolean;
+  limit?: number;
+  category?: string;
+}
+
+const ProductGrid = ({ featured = false, onSale = false, limit, category }: ProductGridProps) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { gender } = useParams<{ gender: string }>();
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        let fetchedProducts: Product[] = [];
+
+        if (gender) {
+          fetchedProducts = await getProductsByGender(gender);
+        } else if (onSale) {
+          fetchedProducts = await getSaleProducts();
+        } else {
+          fetchedProducts = await getProducts({ 
+            featured, 
+            category,
+            // Add more filters as needed
+          });
         }
-        return 0;
-    }
-  });
 
-  return (
-    <div className="w-full">
-      {/* Sorting and filters */}
-      <div className="flex flex-wrap justify-between items-center mb-6">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-xl font-semibold">
-            {recommendedProducts.length > 0 ? "Recommended for You" : "All Products"}
-            <span className="ml-2 text-sm font-normal text-muted-foreground">
-              ({sortedProducts.length} products)
-            </span>
-          </h2>
-        </div>
-        <div className="flex items-center space-x-2 mt-2 sm:mt-0">
-          <Select
-            value={sortOption}
-            onValueChange={(value) => setSortOption(value)}
-          >
-            <SelectTrigger className="w-[180px] bg-white">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recommended">Recommended</SelectItem>
-              <SelectItem value="price-low-to-high">Price: Low to High</SelectItem>
-              <SelectItem value="price-high-to-low">Price: High to Low</SelectItem>
-              <SelectItem value="newest">Newest</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+        // Apply limit if provided
+        if (limit && fetchedProducts.length > limit) {
+          fetchedProducts = fetchedProducts.slice(0, limit);
+        }
 
-      {/* Grid of products */}
-      <div className="product-grid">
-        {sortedProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [featured, gender, onSale, limit, category]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div key={index} className="space-y-3">
+            <Skeleton className="h-60 w-full rounded-lg" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
         ))}
       </div>
+    );
+  }
 
-      {/* Load more button */}
-      {sortedProducts.length > 0 && (
-        <div className="mt-12 text-center">
-          <Button variant="outline">Load more</Button>
-        </div>
-      )}
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-lg font-medium">No products found</h2>
+        <p className="text-muted-foreground mt-1">
+          Try adjusting your filters or check back later.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} />
+      ))}
     </div>
   );
 };
