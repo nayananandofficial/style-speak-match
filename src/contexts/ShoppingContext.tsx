@@ -1,22 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-
-type Product = {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  salePrice?: number;
-  images: string[];
-  gender: 'Men' | 'Women' | 'Unisex' | 'Kids';
-  sizes: string[];
-  colors: string[];
-  confidence?: number;
-  fit?: 'Slim' | 'Regular' | 'Loose' | 'Oversized';
-  fabric: string;
-  description: string;
-  bestFit?: boolean;
-};
+import { Product } from "@/services/productService";
 
 type CartItem = {
   product: Product;
