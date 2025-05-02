@@ -30,8 +30,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    // Use deployed URL for redirects instead of hardcoding localhost
-    redirectTo: `${getRedirectUrl()}/reset-password/update`,
+    // Use the URL from global config for redirects
+    // The current API doesn't accept redirectTo directly in the client config
   },
 });
 
