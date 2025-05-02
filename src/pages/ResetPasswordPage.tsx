@@ -9,14 +9,20 @@ import { useAuth } from "@/contexts/AuthContext";
 const ResetPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const { resetPassword } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setSuccess(false);
     
     try {
-      await resetPassword(email);
+      const { error } = await resetPassword(email);
+      
+      if (!error) {
+        setSuccess(true);
+      }
     } catch (error) {
       console.error("Error in reset password:", error);
     } finally {
@@ -42,27 +48,33 @@ const ResetPasswordPage = () => {
             </p>
           </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required 
-              />
+          {success ? (
+            <div className="bg-green-50 border border-green-200 text-green-800 p-4 rounded-md mb-4">
+              <p>Password reset email sent! Check your inbox for instructions.</p>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Sending..." : "Reset Password"}
-            </Button>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required 
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Reset Password"}
+              </Button>
+            </form>
+          )}
           
           <div className="mt-6 text-center text-sm">
             <p>

@@ -17,6 +17,7 @@ import SalePage from "./pages/SalePage";
 import ProfilePage from "./pages/ProfilePage";
 import WishlistPage from "./pages/WishlistPage";
 import OrdersPage from "./pages/OrdersPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import FAQPage from "./pages/FAQPage";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/wishlist" element={<WishlistPage />} />
             <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailPage />} />
             
             {/* Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />

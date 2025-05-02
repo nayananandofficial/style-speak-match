@@ -17,7 +17,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
   supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ianJpYXNha2N0c21sZnl4dnVtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYxMzA4MzksImV4cCI6MjA2MTcwNjgzOX0.yAgNmXkN-AOnnrUHBlR6BgF0KF4wwCcy0BLb_Et4Q7k";
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Get the current deployed URL for auth redirects
+const getRedirectUrl = () => {
+  const isBrowser = typeof window !== 'undefined';
+  // In the browser, use the current origin (deployed URL)
+  const baseUrl = isBrowser ? window.location.origin : 'http://localhost:5173';
+  return baseUrl;
+};
+
+// Create and configure the Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    // Use deployed URL for redirects instead of hardcoding localhost
+    redirectTo: `${getRedirectUrl()}/reset-password/update`,
+  },
+});
 
 // Helper function to get user profile
 export async function getUserProfile() {
